@@ -1,0 +1,49 @@
+#
+# Caroline configuration 
+#
+# Author: ozzy <ozzy@skyirc.net>
+# Copyright: Copyright (c) ozzy
+# License: http://opensource.org/licenses/gpl-3.0.html GNU General Public License, version 3
+#
+
+# General IRC settings
+general:
+  
+  # IRC server to connect to
+  server: irc.skyirc.net
+  
+  # Port for this IRC server
+  port: 6667
+  
+  # Nickname
+  nick: Caroline
+  
+  # Realname
+  realname: Caroline - ozzy's IRC bot
+  
+
+# Services setup
+services:
+  
+  # Services to login to
+  # Supported: NickServ, Q (QuakeNet)
+  type: NickServ
+  
+  # Username
+  username: Caroline
+  
+  # Password
+  password: ***
+  
+
+# Other suff
+misc:
+  
+  # Log channel
+  # 'none' for disabling
+  logchannel: none
+  
+# Script files to be included - located in scripts/
+scripts:
+  
+  - services.php
