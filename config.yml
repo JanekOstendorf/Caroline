@@ -21,6 +21,9 @@ general:
   # Realname
   realname: Caroline - ozzy's IRC bot
   
+  # User ident
+  ident: ozzy
+  
 
 # Services setup
 services:
@@ -42,6 +45,14 @@ misc:
   # Log channel
   # 'none' for disabling
   logchannel: none
+  
+  # Logfile
+  logfile: caroline.log
+  
+  # Verbose logging
+  # Log every little step?
+  verbose_logging: true
+  
   
 # Script files to be included - located in scripts/
 scripts:

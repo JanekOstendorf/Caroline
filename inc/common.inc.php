@@ -11,6 +11,13 @@
 require_once PATH.'inc/classes/spyc.class.php';
 
 // Configuration
-require_once PATH.'inc/classes/config.class.php'
+require_once PATH.'inc/classes/config.class.php';
+
+// Macros/constants
+require_once PATH.'inc/macros.inc.php';
+        
+// IRC and API class
+require_once PATH.'inc/classes/api.class.php';
+require_once PATH.'inc/classes/irc.class.php';
 
 ?>

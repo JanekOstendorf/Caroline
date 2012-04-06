@@ -15,10 +15,17 @@ else {
     define('WINDOWS', false);
 }
 
+date_default_timezone_set('UTC');
+
 // Absolute path to our directory
 define('PATH', dirname(__FILE__).'/');
 
 // Include the includes
 require_once PATH.'inc/common.inc.php';
+
+$irc = new irc();
+
+$irc->read_config(PATH.'config.yml');
+$irc->run();
 
 ?>

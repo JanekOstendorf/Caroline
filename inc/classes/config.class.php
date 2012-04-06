@@ -69,7 +69,7 @@ class config {
             }
         }
         
-        if(!is_string($tmp) || empty($tmp) || is_null($tmp)) {
+        if(empty($tmp) || is_null($tmp)) {
             return $var;
         }
         
