@@ -39,6 +39,13 @@ class irc extends api {
      */
     private $verbose_log = false;
     
+    /**
+     * Received line
+     * @var array
+     */
+    private $msg;
+    
+    
     
     /**
      * Initialize the API 
@@ -181,17 +188,16 @@ class irc extends api {
      */
     private function login($nick, $realname, $ident, $password = NULL, $sasl = false) {
         
-        if($sasl) {
+        // SASL to be added later
+        /*if($sasl) {
             $this->raw('CAP REQ :sasl');
-        }
+        }*/
         if($password != NULL) {
             $this->raw('PASS '.$password);
         }
         
         $this->raw('USER '.$ident.' 8 * :'.$realname);
         $this->raw('NICK '.$nick);
-        
-        
         
     }
     
@@ -204,11 +210,21 @@ class irc extends api {
         
         while(true) {
         
+            // Fetch line from the server
             $data = fgets($this->socket, 256);
 
             $this->output($data);
 
             flush();
+            
+            // Store the line
+            $this->msg = explode(' ', $data);
+            
+            // Play ping pong
+            if($this->msg[0] == 'PING') {
+                $this->raw('PONG');
+            }
+            
         
         }
         
