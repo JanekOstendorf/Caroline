@@ -19,7 +19,7 @@ class irc extends api {
      * Configuration
      * @var object
      */
-    private $config;
+    public $config;
     
     /**
      * Error string for the socket connection
@@ -49,7 +49,7 @@ class irc extends api {
      * Channels
      * @var array 
      */
-    private $channels = array();
+    public $channels = array();
     
     
     
@@ -79,6 +79,8 @@ class irc extends api {
             return true;
         
     }
+    
+   
     
     /**
      * Writes $message in our logfile
@@ -248,10 +250,14 @@ class irc extends api {
      */
     public function run() {
         
+        $this->call_event(EV_BCONNECT);
+        
         $this->connect($this->config->get('general.server'), $this->config->get('general.port'));
         $this->login($this->config->get('general.nick'), $this->config->get('general.realname'), $this->config->get('general.ident'));  
         
         sleep(4);
+        
+        $this->call_event(EV_ACONNECT);
         
         $this->channels['#Caroline'] = new channel('#Caroline', $this, true);
         

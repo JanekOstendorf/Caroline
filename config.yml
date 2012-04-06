@@ -57,4 +57,4 @@ misc:
 # Script files to be included - located in scripts/
 scripts:
   
-  - services.php
+  - script.php

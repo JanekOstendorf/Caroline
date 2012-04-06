@@ -32,7 +32,7 @@ class api {
         // before connecting
         $this->events[EV_BCONNECT] = array();
         
-        // directly after connecting
+        // after logging in to the IRC server
         $this->events[EV_ACONNECT] = array();
        
     }
@@ -57,33 +57,60 @@ class api {
                 }
                 
                 // Call bind function
-                return $this->bind_channel(func_get_arg(1), func_get_arg(2));
+                // Check types
+                if(!is_string(func_get_arg(1)) || !is_callable(func_get_arg(2)))
+                    return false;
+
+                // Append the function to the event array
+                $this->events[EV_CHANNEL][] = array('listen' => func_get_arg(1), 
+                                                    'function' => func_get_arg(2));
+                
+                return true;
                 
                 break;
+                
+            /*
+             * BEFORE CONNECT EVENT
+             */
+            case EV_BCONNECT:
+                
+                // Check arguments
+                if(func_num_args() != 2) {
+                    return false;
+                }
+                
+                // Call bind function
+                // Check types
+                if(!is_callable(func_get_arg(1)))
+                    return false;
+
+                // Append the function to the event array
+                $this->events[EV_BCONNECT][] = array('function' => func_get_arg(1));
+                
+                return true;
+                
+            /*
+             * AFTER CONNECT EVENT
+             */
+            case EV_ACONNECT:
+                
+                // Check arguments
+                if(func_num_args() != 2) {
+                    return false;
+                }
+                
+                // Call bind function
+                // Check types
+                if(!is_callable(func_get_arg(1)))
+                    return false;
+
+                // Append the function to the event array
+                $this->events[EV_ACONNECT][] = array('function' => func_get_arg(1));
+                
+                return true;
             
             
         }
-        
-    }
-    
-   /**
-    * Binds to a channel event
-    * @param string $listen String to search for
-    * @param callback $function Function to be executed
-    * @param boolean $regex Is $listen a regex expression?
-    * @return boolean Success?
-    */
-    private final function bind_channel($listen, $function) {
-        
-        // Check types
-        if(!is_string($listen) || !is_callable($function))
-            return false;
-        
-        // Append the function to the event array
-        $this->events[EV_CHANNEL][] = array('listen' => $listen, 
-                                            'function' => $function);
-        
-        return true;
         
     }
     
@@ -105,12 +132,38 @@ class api {
                 // Is there a function to call?
                 foreach($this->events[EV_CHANNEL] as $cur_event) {
                     
-                    var_dump($cur_event);
-                    
                     if(trim(strtolower($cur_event['listen'])) == trim(strtolower($command))) {                        
                         call_user_func_array($cur_event['function'], array(&$this, &$channel, &$sender, $arg));
                     }
                     
+                }
+                
+                break;
+                
+            /*
+             * BEFORE CONNECT EVENT
+             */
+            case EV_BCONNECT:
+                
+                // Call all functions
+                foreach ($this->events[EV_BCONNECT] as $cur_event) {
+                    
+                    call_user_func_array($cur_event['function'], array(&$this));
+                
+                }
+                
+                break;
+                
+            /*
+             * AFTER LOGIN EVENT
+             */
+            case EV_ACONNECT:
+                
+                // Call all functions
+                foreach ($this->events[EV_ACONNECT] as $cur_event) {
+                    
+                    call_user_func_array($cur_event['function'], array(&$this));
+                
                 }
                 
                 break;

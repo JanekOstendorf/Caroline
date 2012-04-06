@@ -26,6 +26,16 @@ require_once PATH.'inc/common.inc.php';
 $irc = new irc();
 
 $irc->read_config(PATH.'config.yml');
+
+// Read scripts
+$scripts = $irc->config->get('scripts');
+
+foreach ($scripts as $cur_script) {
+
+    include PATH.'scripts/'.$cur_script;
+
+}
+
 $irc->run();
 
 ?>
