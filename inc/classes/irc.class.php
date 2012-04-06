@@ -45,6 +45,12 @@ class irc extends api {
      */
     private $msg;
     
+    /**
+     * Channels
+     * @var array 
+     */
+    private $channels = array();
+    
     
     
     /**
@@ -142,15 +148,22 @@ class irc extends api {
     }
     
     /**
-     * Closes the socket connection opened by connec()
+     * QUITs and closes the socket connection opened by connect()
+     * @param string $message Quit message
      * @return boolean Success
      */
-    private function disconnect() {
+    public function disconnect($message) {
+        
+        $this->raw('QUIT :'.$message);
+        
+        sleep(1);
         
         if(!fclose($this->socket)) {
             $this->write_log('Failed to disconnect - '.$this->error_string);
             return false;
         }
+        
+        die('QUIT: '.$message);
         
         return true;
         
@@ -161,7 +174,7 @@ class irc extends api {
      * @param string $raw 
      * @return boolean Success
      */
-    private function raw($raw) {
+    public function raw($raw) {
         
         if(!fputs($this->socket, $raw."\n")) {
             
@@ -171,8 +184,8 @@ class irc extends api {
             return false;
         }
         
-        if($this->verbose_log)
-                $this->output('[Sending] '.$raw."\n");
+        
+        $this->output('[Sending] '.$raw."\n");
         
         return true;
         
@@ -201,12 +214,46 @@ class irc extends api {
         
     }
     
+    /**
+     * Sends a PRIVMSG zu $target
+     * @param string $target User or channel
+     * @param string $message Message to be sent
+     */
+    public function privmsg($target, $message) {
+        $this->raw('PRIVMSG '.$target.' :'.$message);
+    }
+    
+    /**
+     * Sends a NOTICE to $target
+     * @param string $target User or channel
+     * @param string $message Message to be sent
+     */
+    public function notice($target, $message) {
+        $this->raw('NOTICE '.$target.' :'.$message);
+    }
+    
+    /**
+     * PRIVMSGs an ACTION to $target
+     * @param string $target User or channel
+     * @param string $message Message to be sent
+     */
+    public function action($target, $message) {
+        $this->raw('PRIVMSG '.$target.' :'.chr(1).'ACTION '.$message.chr(1));
+    }
+    
     /**#@-*/
     
+    /**
+     * Runs the bot 
+     */
     public function run() {
         
         $this->connect($this->config->get('general.server'), $this->config->get('general.port'));
-        $this->login($this->config->get('general.nick'), $this->config->get('general.realname'), $this->config->get('general.ident'), '***', true);
+        $this->login($this->config->get('general.nick'), $this->config->get('general.realname'), $this->config->get('general.ident'));  
+        
+        sleep(4);
+        
+        $this->channels['#Caroline'] = new channel('#Caroline', $this, true);
         
         while(true) {
         
@@ -224,7 +271,33 @@ class irc extends api {
             if($this->msg[0] == 'PING') {
                 $this->raw('PONG');
             }
+          
             
+            // Is it a channel message?
+            // style: :nick!ident@hostname PRIVMSG #channel :message
+            if($this->msg[1] == 'PRIVMSG' && in_array(substr($this->msg[2], 0, 1), array('#', '&'))) {
+                
+                // Split up the hostmask
+                $tmp = explode('!', substr($this->msg[0], 1));
+                
+                $sender = new user($this, $tmp[0]);
+                
+                if(!isset($this->channels[$this->msg[2]])) {
+                    $this->channels[$this->msg[2]] = new channel($this->msg[2], $this, false);
+                }
+                
+                // Channel
+                $channel = $this->channels[$this->msg[2]];
+                
+                // Command
+                $command = substr($this->msg[3], 1);
+                
+                // Arguments
+                $arg = array_slice($this->msg, 4);
+                
+                $this->call_event(EV_CHANNEL, $channel, $sender, $command, $arg);
+                
+            }
         
         }
         

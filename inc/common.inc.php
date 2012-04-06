@@ -15,6 +15,12 @@ require_once PATH.'inc/classes/config.class.php';
 
 // Macros/constants
 require_once PATH.'inc/macros.inc.php';
+
+// Channel class
+require_once PATH.'inc/classes/channel.class.php';
+
+// User class
+require_once PATH.'inc/classes/user.class.php';
         
 // IRC and API class
 require_once PATH.'inc/classes/api.class.php';

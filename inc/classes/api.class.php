@@ -52,15 +52,12 @@ class api {
             case EV_CHANNEL:
 
                 // Check arguments
-                if(func_num_args() < 3 || func_num_args() > 4) {
+                if(func_num_args() != 3) {
                     return false;
                 }
                 
                 // Call bind function
-                if(func_num_args() == 3)
-                    return $this->bind_channel(func_get_arg(1), func_get_arg(2));
-                else
-                    return $this->bind_channel(func_get_arg(1), func_get_arg(2), func_get_arg(3));
+                return $this->bind_channel(func_get_arg(1), func_get_arg(2));
                 
                 break;
             
@@ -76,18 +73,50 @@ class api {
     * @param boolean $regex Is $listen a regex expression?
     * @return boolean Success?
     */
-    private final function bind_channel($listen, $function, $regex = false) {
+    private final function bind_channel($listen, $function) {
         
         // Check types
-        if(!is_string($listen) || !is_string($function) || !is_bool($regex))
+        if(!is_string($listen) || !is_callable($function))
             return false;
         
         // Append the function to the event array
         $this->events[EV_CHANNEL][] = array('listen' => $listen, 
-                                            'function' => $function, 
-                                            'regex' => $regex);
+                                            'function' => $function);
         
         return true;
+        
+    }
+    
+    public final function call_event($type) {
+        
+        switch($type) {
+            
+            /*
+             * CHANNEL EVENT
+             */
+            case EV_CHANNEL:
+
+                // Parse arguments
+                $channel = func_get_arg(1);
+                $sender = func_get_arg(2);
+                $command = func_get_arg(3);
+                $arg = func_get_arg(4);
+                
+                // Is there a function to call?
+                foreach($this->events[EV_CHANNEL] as $cur_event) {
+                    
+                    var_dump($cur_event);
+                    
+                    if(trim(strtolower($cur_event['listen'])) == trim(strtolower($command))) {                        
+                        call_user_func_array($cur_event['function'], array(&$this, &$channel, &$sender, $arg));
+                    }
+                    
+                }
+                
+                break;
+            
+            
+        }
         
     }
     
