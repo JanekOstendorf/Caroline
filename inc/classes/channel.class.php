@@ -10,6 +10,12 @@
 class channel {
     
     /**
+     * ID in the database
+     * @var int 
+     */
+    private $id;
+    
+    /**
      * IRC contect
      * @var object
      */
@@ -24,6 +30,7 @@ class channel {
     /**
      * Creates a new channel
      * @param object $irc IRC context (IRC class)
+     * @return boolean Success
      */
     public function __construct($name, &$irc, $join = false) {
         
@@ -33,8 +40,31 @@ class channel {
         // Create IRC contect reference
         $this->irc =& $irc;
         
+        var_dump('SELECT * FROM channels WHERE name = \''.SQLite3::escapeString($name).'\' LIMIT 1');
+        
+        // Fetch info from the database
+        if(!$result = $this->irc->db->query('SELECT * FROM channels WHERE name = \''.SQLite3::escapeString($name).'\' LIMIT 1')) {
+            return false;            
+        }
+        
+        // Channel does not exist
+        if($result->fetchArray() === false || count($result->fetchArray()) != 1) {
+            
+            // Create channel
+            $this->irc->db->exec('INSERT INTO channels (name, joined) VALUES(\''.SQLite3::escapeString($name).'\', 0)');
+            $result = $this->irc->db->query('SELECT * FROM channels WHERE name = \''.SQLite3::escapeString($name).'\' LIMIT 1');
+            
+        }
+        
+        // Get ID
+        $data = $result->fetchArray(SQLITE3_ASSOC);
+        
+        $this->id = $data['id'];
+        
         if($join)
             $this->join();
+        
+        return true;
         
     }
     
@@ -53,6 +83,7 @@ class channel {
     public function join() {
         
         $this->irc->raw('JOIN '.$this->name);
+        $this->irc->db->exec('UPDATE channels SET joined = 1 WHERE id = '.$this->id);
         
     }
     
@@ -63,6 +94,7 @@ class channel {
     public function part($message) {
         
         $this->irc->raw('PART '.$this->name.' :'.$message);
+        $this->irc->db->exec('UPDATE channels SET joined = 0 WHERE id = '.SQLite3::escapeString($this->id));
         
     }
     
@@ -96,6 +128,20 @@ class channel {
         
     }
     
+    /**
+     * Removes a channel from the database
+     * @return boolean Success
+     */
+    public function delete() {
+        
+        if(!$this->irc->db->exec('DELETE FROM channels WHERE id = '.SQLite3::escapeString($this->id)))
+            return false;
+        
+        $this->__destruct();
+        
+        return true;
+        
+    }
     
 }
 

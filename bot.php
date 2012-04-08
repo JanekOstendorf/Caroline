@@ -26,6 +26,7 @@ require_once PATH.'inc/common.inc.php';
 $irc = new irc();
 
 $irc->read_config(PATH.'config.yml');
+$irc->open_database(PATH.'storage.sqlite');
 
 // Read scripts
 $scripts = $irc->config->get('scripts');

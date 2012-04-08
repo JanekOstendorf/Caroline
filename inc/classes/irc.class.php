@@ -51,6 +51,12 @@ class irc extends api {
      */
     public $channels = array();
     
+    /**
+     * SQLite object
+     * @var object
+     */
+    public $db;
+    
     
     
     /**
@@ -80,6 +86,21 @@ class irc extends api {
         
     }
     
+    /**
+     * Opens our SQLite database
+     * @param string $file SQLite file
+     * @return boolean 
+     */
+    public function open_database($file) {
+        
+        $this->db = new SQLite3($file);
+        
+        if(!$this->db)
+            return false;
+        
+        return true;
+        
+    } 
    
     
     /**
@@ -116,6 +137,22 @@ class irc extends api {
         
         if(!print('['.date('Y-m-d H:i:s e').'] '.$message))
             return false;
+        
+    }
+    
+    /**
+     * Joins all channels in the database 
+     */
+    private function join_channels() {
+        
+        $result = $this->db->query('SELECT * FROM channels ORDER BY name');
+        
+        while($line = $result->fetchArray()) {
+            
+            $this->channels[$line['name']] = new channel($line['name'], $this, true);
+            usleep(500);
+            
+        }
         
     }
     
@@ -257,11 +294,11 @@ class irc extends api {
         
         sleep(4);
         
+        $this->join_channels();
+        
         $this->call_event(EV_ACONNECT);
         
-        $this->channels['#Caroline'] = new channel('#Caroline', $this, true);
-        
-        while(true) {
+        while($this->socket) {
         
             // Fetch line from the server
             $data = fgets($this->socket, 256);
@@ -269,6 +306,9 @@ class irc extends api {
             $this->output($data);
 
             flush();
+            
+            // Remove the linebreak
+            $data = substr($data, 0, strlen($data) - 2);
             
             // Store the line
             $this->msg = explode(' ', $data);
@@ -306,6 +346,10 @@ class irc extends api {
             }
         
         }
+        
+        $this->disconnect('Socket invalid.');
+        
+        return;
         
     }
     
